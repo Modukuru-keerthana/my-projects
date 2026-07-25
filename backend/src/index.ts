@@ -19,7 +19,6 @@ app.use(express.json());
 let db: any;
 
 // ============================================
-// // ============================================
 // DATABASE INIT
 // ============================================
 async function initDB() {
@@ -28,27 +27,19 @@ async function initDB() {
         driver: sqlite3.Database
     });
 
-    // ✅ FIX: Use process.cwd() to find the schema file
-    // This works both locally and on Render
     let schemaPath: string;
 
-    // Check if we're in production (Render) or local
     if (process.env.NODE_ENV === 'production') {
-        // On Render, the src folder is at the root level
         schemaPath = path.join(process.cwd(), 'src', 'db', 'schema.sql');
     } else {
-        // Locally, it's in the src folder relative to __dirname
         schemaPath = path.join(__dirname, '..', 'src', 'db', 'schema.sql');
     }
 
-    // If the first path doesn't work, try the other one
     if (!fs.existsSync(schemaPath)) {
-        // Fallback: try the other location
         const fallbackPath = path.join(process.cwd(), 'src', 'db', 'schema.sql');
         if (fs.existsSync(fallbackPath)) {
             schemaPath = fallbackPath;
         } else {
-            // Final fallback: try to read from the dist folder
             schemaPath = path.join(__dirname, 'db', 'schema.sql');
         }
     }
@@ -61,74 +52,11 @@ async function initDB() {
         console.log('✅ Database ready');
     } catch (error) {
         console.error('❌ Error reading schema file:', error);
-        // If schema file isn't found, try to create the database without it
-        // This is a fallback for production
         console.log('⚠️ Creating database with minimal schema...');
         await createMinimalSchema();
     }
 }
 
-// ============================================
-// SEED DATA FUNCTION - ADD THIS AFTER initDB()
-// ============================================
-async function seedDatabase() {
-    console.log('🌱 Checking database...');
-    
-    // Check if products exist
-    const productCount = await db.get('SELECT COUNT(*) as count FROM products');
-    
-    // If products exist but are wrong (customer names in products table)
-    // Clear them and re-add correct products
-    if (productCount.count > 0) {
-        console.log('🗑️ Clearing existing products...');
-        await db.run('DELETE FROM products');
-        console.log('✅ Products cleared!');
-    }
-
-    console.log('📦 Seeding products...');
-
-    // Add correct products
-    const products = [
-        { name: 'Dell XPS 13 Laptop', sku: 'LAP-001', category: 'Electronics', unit_price: 85000, current_stock: 10, min_stock_alert: 3 },
-        { name: 'MacBook Air M2', sku: 'LAP-002', category: 'Electronics', unit_price: 99000, current_stock: 8, min_stock_alert: 3 },
-        { name: 'Logitech MX Master Mouse', sku: 'MOUSE-001', category: 'Accessories', unit_price: 8000, current_stock: 30, min_stock_alert: 5 },
-        { name: 'Mechanical Keyboard', sku: 'KEY-001', category: 'Accessories', unit_price: 4500, current_stock: 20, min_stock_alert: 5 },
-        { name: 'Samsung 27 Inch Monitor', sku: 'MON-001', category: 'Electronics', unit_price: 35000, current_stock: 12, min_stock_alert: 4 },
-        { name: 'LG UltraWide Monitor', sku: 'MON-002', category: 'Electronics', unit_price: 28000, current_stock: 6, min_stock_alert: 3 },
-        { name: 'Kingston 1TB SSD', sku: 'SSD-001', category: 'Storage', unit_price: 12000, current_stock: 15, min_stock_alert: 5 },
-        { name: 'Western Digital 2TB HDD', sku: 'HDD-001', category: 'Storage', unit_price: 8000, current_stock: 20, min_stock_alert: 5 },
-        { name: 'Corsair 16GB RAM', sku: 'RAM-001', category: 'Components', unit_price: 6000, current_stock: 30, min_stock_alert: 10 },
-        { name: 'TP-Link WiFi Router', sku: 'NET-001', category: 'Networking', unit_price: 4000, current_stock: 20, min_stock_alert: 5 }
-    ];
-
-    for (const p of products) {
-        await db.run(
-            `INSERT INTO products (name, sku, category, unit_price, current_stock, min_stock_alert)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [p.name, p.sku, p.category, p.unit_price, p.current_stock, p.min_stock_alert]
-        );
-    }
-    console.log(`✅ Added ${products.length} products`);
-    console.log('✅ Database seeding complete!');
-}
-
-// ============================================
-// START SERVER - MODIFY THIS SECTION
-// ============================================
-initDB().then(async () => {
-    // Seed database with products
-    await seedDatabase();
-    
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running at http://localhost:${PORT}`);
-        console.log(`📊 API at http://localhost:${PORT}/api`);
-        console.log(`👤 Default logins:`);
-        console.log(`   admin@erp.com / admin123`);
-        console.log(`   sales@erp.com / sales123`);
-        console.log(`   warehouse@erp.com / warehouse123`);
-        console.log(`   accounts@erp.com / accounts123`);
-    });
-});
 // ============================================
 // FALLBACK: Create schema directly in code
 // ============================================
@@ -228,22 +156,53 @@ async function createMinimalSchema() {
             ('sales@erp.com', 'sales123', 'Sales User', 'sales'),
             ('warehouse@erp.com', 'warehouse123', 'Warehouse User', 'warehouse'),
             ('accounts@erp.com', 'accounts123', 'Accounts User', 'accounts');
-
-            INSERT OR IGNORE INTO customers (name, mobile, email, company, customer_type, status) VALUES 
-            ('ABC Traders', '9876543210', 'rajesh@abc.com', 'ABC Traders', 'Wholesale', 'Active'),
-            ('XYZ Enterprises', '9876543211', 'priya@xyz.com', 'XYZ Enterprises', 'Retail', 'Lead'),
-            ('PQR Solutions', '9876543212', 'amit@pqr.com', 'PQR Solutions', 'Distributor', 'Active');
-
-            INSERT OR IGNORE INTO products (name, sku, category, unit_price, current_stock, min_stock_alert) VALUES 
-            ('Dell Laptop 13"', 'LAP-001', 'Electronics', 45000, 10, 3),
-            ('Logitech Wireless Mouse', 'MOUSE-001', 'Accessories', 500, 50, 10),
-            ('Mechanical Keyboard', 'KEY-001', 'Accessories', 1200, 30, 5),
-            ('Samsung Monitor 27"', 'MON-001', 'Electronics', 25000, 8, 3);
         `);
         console.log('✅ Minimal schema created successfully');
     } catch (error) {
         console.error('❌ Failed to create minimal schema:', error);
     }
+}
+
+// ============================================
+// SEED DATA FUNCTION - FIXED VERSION
+// ============================================
+async function seedDatabase() {
+    console.log('🌱 Checking database...');
+    
+    // Check if products exist
+    const productCount = await db.get('SELECT COUNT(*) as count FROM products');
+    
+    // Clear existing products and re-add correct ones
+    if (productCount.count > 0) {
+        console.log('🗑️ Clearing existing products...');
+        await db.run('DELETE FROM products');
+        console.log('✅ Products cleared!');
+    }
+
+    console.log('📦 Seeding products...');
+
+    const products = [
+        { name: 'Dell XPS 13 Laptop', sku: 'LAP-001', category: 'Electronics', unit_price: 85000, current_stock: 10, min_stock_alert: 3 },
+        { name: 'MacBook Air M2', sku: 'LAP-002', category: 'Electronics', unit_price: 99000, current_stock: 8, min_stock_alert: 3 },
+        { name: 'Logitech MX Master Mouse', sku: 'MOUSE-001', category: 'Accessories', unit_price: 8000, current_stock: 30, min_stock_alert: 5 },
+        { name: 'Mechanical Keyboard', sku: 'KEY-001', category: 'Accessories', unit_price: 4500, current_stock: 20, min_stock_alert: 5 },
+        { name: 'Samsung 27 Inch Monitor', sku: 'MON-001', category: 'Electronics', unit_price: 35000, current_stock: 12, min_stock_alert: 4 },
+        { name: 'LG UltraWide Monitor', sku: 'MON-002', category: 'Electronics', unit_price: 28000, current_stock: 6, min_stock_alert: 3 },
+        { name: 'Kingston 1TB SSD', sku: 'SSD-001', category: 'Storage', unit_price: 12000, current_stock: 15, min_stock_alert: 5 },
+        { name: 'Western Digital 2TB HDD', sku: 'HDD-001', category: 'Storage', unit_price: 8000, current_stock: 20, min_stock_alert: 5 },
+        { name: 'Corsair 16GB RAM', sku: 'RAM-001', category: 'Components', unit_price: 6000, current_stock: 30, min_stock_alert: 10 },
+        { name: 'TP-Link WiFi Router', sku: 'NET-001', category: 'Networking', unit_price: 4000, current_stock: 20, min_stock_alert: 5 }
+    ];
+
+    for (const p of products) {
+        await db.run(
+            `INSERT INTO products (name, sku, category, unit_price, current_stock, min_stock_alert)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [p.name, p.sku, p.category, p.unit_price, p.current_stock, p.min_stock_alert]
+        );
+    }
+    console.log(`✅ Added ${products.length} products`);
+    console.log('✅ Database seeding complete!');
 }
 
 // ============================================
@@ -721,73 +680,14 @@ app.get('/api/dashboard', auth, async (req, res) => {
         totalRevenue: totalRevenue.total || 0
     });
 });
-// ============================================
-// SEED DATA FUNCTION
-// ============================================
-async function seedDatabase() {
-    console.log('🌱 Checking if database needs seeding...');
-    
-    // Check if customers exist
-    const customerCount = await db.get('SELECT COUNT(*) as count FROM customers');
-    if (customerCount.count > 0) {
-        console.log('✅ Database already has data. Skipping seed.');
-        return;
-    }
 
-    console.log('📦 Seeding database with sample data...');
-
-    // Add Customers
-    const customers = [
-        { name: 'Rajesh Sharma', mobile: '9876543210', email: 'rajesh@abc.com', company: 'ABC Traders', customer_type: 'Wholesale', status: 'Active' },
-        { name: 'Priya Patel', mobile: '9876543211', email: 'priya@xyz.com', company: 'XYZ Enterprises', customer_type: 'Retail', status: 'Active' },
-        { name: 'Amit Kumar', mobile: '9876543212', email: 'amit@pqr.com', company: 'PQR Solutions', customer_type: 'Distributor', status: 'Lead' },
-        { name: 'Sneha Reddy', mobile: '9876543213', email: 'sneha@reddy.com', company: 'Reddy Industries', customer_type: 'Wholesale', status: 'Active' },
-        { name: 'Vikram Singh', mobile: '9876543214', email: 'vikram@singh.com', company: 'Singh Group', customer_type: 'Distributor', status: 'Inactive' },
-        { name: 'Kavya Nair', mobile: '9876543215', email: 'kavya@nair.com', company: 'Nair Associates', customer_type: 'Retail', status: 'Active' },
-        { name: 'Arjun Mehta', mobile: '9876543216', email: 'arjun@mehta.com', company: 'Mehta Traders', customer_type: 'Wholesale', status: 'Lead' },
-        { name: 'Deepa Joshi', mobile: '9876543217', email: 'deepa@joshi.com', company: 'Joshi Enterprises', customer_type: 'Distributor', status: 'Active' },
-        { name: 'Rahul Gupta', mobile: '9876543218', email: 'rahul@gupta.com', company: 'Gupta Sons', customer_type: 'Retail', status: 'Inactive' },
-        { name: 'Meera Menon', mobile: '9876543219', email: 'meera@menon.com', company: 'Menon Solutions', customer_type: 'Wholesale', status: 'Active' }
-    ];
-
-    for (const c of customers) {
-        await db.run(
-            `INSERT INTO customers (name, mobile, email, company, customer_type, status)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [c.name, c.mobile, c.email, c.company, c.customer_type, c.status]
-        );
-    }
-    console.log(`✅ Added ${customers.length} customers`);
-
-    // Add Products
-    const products = [
-        { name: 'Dell XPS 13 Laptop', sku: 'LAP-001', category: 'Electronics', unit_price: 85000, current_stock: 10, min_stock_alert: 3 },
-        { name: 'MacBook Air M2', sku: 'LAP-002', category: 'Electronics', unit_price: 99000, current_stock: 8, min_stock_alert: 3 },
-        { name: 'Logitech MX Master Mouse', sku: 'MOUSE-001', category: 'Accessories', unit_price: 8000, current_stock: 30, min_stock_alert: 5 },
-        { name: 'Mechanical Keyboard', sku: 'KEY-001', category: 'Accessories', unit_price: 4500, current_stock: 20, min_stock_alert: 5 },
-        { name: 'Samsung 27 Inch Monitor', sku: 'MON-001', category: 'Electronics', unit_price: 35000, current_stock: 12, min_stock_alert: 4 },
-        { name: 'LG UltraWide Monitor', sku: 'MON-002', category: 'Electronics', unit_price: 28000, current_stock: 6, min_stock_alert: 3 },
-        { name: 'Kingston 1TB SSD', sku: 'SSD-001', category: 'Storage', unit_price: 12000, current_stock: 15, min_stock_alert: 5 },
-        { name: 'Western Digital 2TB HDD', sku: 'HDD-001', category: 'Storage', unit_price: 8000, current_stock: 20, min_stock_alert: 5 },
-        { name: 'Corsair 16GB RAM', sku: 'RAM-001', category: 'Components', unit_price: 6000, current_stock: 30, min_stock_alert: 10 },
-        { name: 'TP-Link WiFi Router', sku: 'NET-001', category: 'Networking', unit_price: 4000, current_stock: 20, min_stock_alert: 5 }
-    ];
-
-    for (const p of products) {
-        await db.run(
-            `INSERT INTO products (name, sku, category, unit_price, current_stock, min_stock_alert)
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [p.name, p.sku, p.category, p.unit_price, p.current_stock, p.min_stock_alert]
-        );
-    }
-    console.log(`✅ Added ${products.length} products`);
-
-    console.log('✅ Database seeding complete!');
-}
 // ============================================
 // START SERVER
 // ============================================
-initDB().then(() => {
+initDB().then(async () => {
+    // Seed database with products
+    await seedDatabase();
+    
     app.listen(PORT, () => {
         console.log(`🚀 Server running at http://localhost:${PORT}`);
         console.log(`📊 API at http://localhost:${PORT}/api`);
