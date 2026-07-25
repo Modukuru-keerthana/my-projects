@@ -171,16 +171,41 @@ async function seedDatabase() {
     
     // Check if products exist
     const productCount = await db.get('SELECT COUNT(*) as count FROM products');
+    const customerCount = await db.get('SELECT COUNT(*) as count FROM customers');
     
-    // Clear existing products and re-add correct ones
-    if (productCount.count > 0) {
-        console.log('🗑️ Clearing existing products...');
+    // Clear ALL existing data to prevent mixing
+    if (productCount.count > 0 || customerCount.count > 0) {
+        console.log('🗑️ Clearing existing data...');
+        await db.run('DELETE FROM sales_challan_items');
+        await db.run('DELETE FROM sales_challans');
+        await db.run('DELETE FROM stock_movements');
+        await db.run('DELETE FROM followups');
         await db.run('DELETE FROM products');
-        console.log('✅ Products cleared!');
+        await db.run('DELETE FROM customers');
+        console.log('✅ All data cleared!');
     }
+
+    console.log('📦 Seeding customers...');
+
+    // Add ONLY customers to customers table
+    const customers = [
+        { name: 'Rajesh Sharma', mobile: '9876543210', email: 'rajesh@abc.com', company: 'ABC Traders', customer_type: 'Wholesale', status: 'Active' },
+        { name: 'Priya Patel', mobile: '9876543211', email: 'priya@xyz.com', company: 'XYZ Enterprises', customer_type: 'Retail', status: 'Lead' },
+        { name: 'Amit Kumar', mobile: '9876543212', email: 'amit@pqr.com', company: 'PQR Solutions', customer_type: 'Distributor', status: 'Active' }
+    ];
+
+    for (const c of customers) {
+        await db.run(
+            `INSERT INTO customers (name, mobile, email, company, customer_type, status)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [c.name, c.mobile, c.email, c.company, c.customer_type, c.status]
+        );
+    }
+    console.log(`✅ Added ${customers.length} customers`);
 
     console.log('📦 Seeding products...');
 
+    // Add ONLY products to products table
     const products = [
         { name: 'Dell XPS 13 Laptop', sku: 'LAP-001', category: 'Electronics', unit_price: 85000, current_stock: 10, min_stock_alert: 3 },
         { name: 'MacBook Air M2', sku: 'LAP-002', category: 'Electronics', unit_price: 99000, current_stock: 8, min_stock_alert: 3 },
@@ -204,7 +229,6 @@ async function seedDatabase() {
     console.log(`✅ Added ${products.length} products`);
     console.log('✅ Database seeding complete!');
 }
-
 // ============================================
 // AUTH MIDDLEWARE
 // ============================================
