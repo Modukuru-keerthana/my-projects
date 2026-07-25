@@ -19,6 +19,7 @@ app.use(express.json());
 let db: any;
 
 // ============================================
+// // ============================================
 // DATABASE INIT
 // ============================================
 async function initDB() {
@@ -67,6 +68,67 @@ async function initDB() {
     }
 }
 
+// ============================================
+// SEED DATA FUNCTION - ADD THIS AFTER initDB()
+// ============================================
+async function seedDatabase() {
+    console.log('🌱 Checking database...');
+    
+    // Check if products exist
+    const productCount = await db.get('SELECT COUNT(*) as count FROM products');
+    
+    // If products exist but are wrong (customer names in products table)
+    // Clear them and re-add correct products
+    if (productCount.count > 0) {
+        console.log('🗑️ Clearing existing products...');
+        await db.run('DELETE FROM products');
+        console.log('✅ Products cleared!');
+    }
+
+    console.log('📦 Seeding products...');
+
+    // Add correct products
+    const products = [
+        { name: 'Dell XPS 13 Laptop', sku: 'LAP-001', category: 'Electronics', unit_price: 85000, current_stock: 10, min_stock_alert: 3 },
+        { name: 'MacBook Air M2', sku: 'LAP-002', category: 'Electronics', unit_price: 99000, current_stock: 8, min_stock_alert: 3 },
+        { name: 'Logitech MX Master Mouse', sku: 'MOUSE-001', category: 'Accessories', unit_price: 8000, current_stock: 30, min_stock_alert: 5 },
+        { name: 'Mechanical Keyboard', sku: 'KEY-001', category: 'Accessories', unit_price: 4500, current_stock: 20, min_stock_alert: 5 },
+        { name: 'Samsung 27 Inch Monitor', sku: 'MON-001', category: 'Electronics', unit_price: 35000, current_stock: 12, min_stock_alert: 4 },
+        { name: 'LG UltraWide Monitor', sku: 'MON-002', category: 'Electronics', unit_price: 28000, current_stock: 6, min_stock_alert: 3 },
+        { name: 'Kingston 1TB SSD', sku: 'SSD-001', category: 'Storage', unit_price: 12000, current_stock: 15, min_stock_alert: 5 },
+        { name: 'Western Digital 2TB HDD', sku: 'HDD-001', category: 'Storage', unit_price: 8000, current_stock: 20, min_stock_alert: 5 },
+        { name: 'Corsair 16GB RAM', sku: 'RAM-001', category: 'Components', unit_price: 6000, current_stock: 30, min_stock_alert: 10 },
+        { name: 'TP-Link WiFi Router', sku: 'NET-001', category: 'Networking', unit_price: 4000, current_stock: 20, min_stock_alert: 5 }
+    ];
+
+    for (const p of products) {
+        await db.run(
+            `INSERT INTO products (name, sku, category, unit_price, current_stock, min_stock_alert)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [p.name, p.sku, p.category, p.unit_price, p.current_stock, p.min_stock_alert]
+        );
+    }
+    console.log(`✅ Added ${products.length} products`);
+    console.log('✅ Database seeding complete!');
+}
+
+// ============================================
+// START SERVER - MODIFY THIS SECTION
+// ============================================
+initDB().then(async () => {
+    // Seed database with products
+    await seedDatabase();
+    
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running at http://localhost:${PORT}`);
+        console.log(`📊 API at http://localhost:${PORT}/api`);
+        console.log(`👤 Default logins:`);
+        console.log(`   admin@erp.com / admin123`);
+        console.log(`   sales@erp.com / sales123`);
+        console.log(`   warehouse@erp.com / warehouse123`);
+        console.log(`   accounts@erp.com / accounts123`);
+    });
+});
 // ============================================
 // FALLBACK: Create schema directly in code
 // ============================================
