@@ -659,7 +659,69 @@ app.get('/api/dashboard', auth, async (req, res) => {
         totalRevenue: totalRevenue.total || 0
     });
 });
+// ============================================
+// SEED DATA FUNCTION
+// ============================================
+async function seedDatabase() {
+    console.log('🌱 Checking if database needs seeding...');
+    
+    // Check if customers exist
+    const customerCount = await db.get('SELECT COUNT(*) as count FROM customers');
+    if (customerCount.count > 0) {
+        console.log('✅ Database already has data. Skipping seed.');
+        return;
+    }
 
+    console.log('📦 Seeding database with sample data...');
+
+    // Add Customers
+    const customers = [
+        { name: 'Rajesh Sharma', mobile: '9876543210', email: 'rajesh@abc.com', company: 'ABC Traders', customer_type: 'Wholesale', status: 'Active' },
+        { name: 'Priya Patel', mobile: '9876543211', email: 'priya@xyz.com', company: 'XYZ Enterprises', customer_type: 'Retail', status: 'Active' },
+        { name: 'Amit Kumar', mobile: '9876543212', email: 'amit@pqr.com', company: 'PQR Solutions', customer_type: 'Distributor', status: 'Lead' },
+        { name: 'Sneha Reddy', mobile: '9876543213', email: 'sneha@reddy.com', company: 'Reddy Industries', customer_type: 'Wholesale', status: 'Active' },
+        { name: 'Vikram Singh', mobile: '9876543214', email: 'vikram@singh.com', company: 'Singh Group', customer_type: 'Distributor', status: 'Inactive' },
+        { name: 'Kavya Nair', mobile: '9876543215', email: 'kavya@nair.com', company: 'Nair Associates', customer_type: 'Retail', status: 'Active' },
+        { name: 'Arjun Mehta', mobile: '9876543216', email: 'arjun@mehta.com', company: 'Mehta Traders', customer_type: 'Wholesale', status: 'Lead' },
+        { name: 'Deepa Joshi', mobile: '9876543217', email: 'deepa@joshi.com', company: 'Joshi Enterprises', customer_type: 'Distributor', status: 'Active' },
+        { name: 'Rahul Gupta', mobile: '9876543218', email: 'rahul@gupta.com', company: 'Gupta Sons', customer_type: 'Retail', status: 'Inactive' },
+        { name: 'Meera Menon', mobile: '9876543219', email: 'meera@menon.com', company: 'Menon Solutions', customer_type: 'Wholesale', status: 'Active' }
+    ];
+
+    for (const c of customers) {
+        await db.run(
+            `INSERT INTO customers (name, mobile, email, company, customer_type, status)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [c.name, c.mobile, c.email, c.company, c.customer_type, c.status]
+        );
+    }
+    console.log(`✅ Added ${customers.length} customers`);
+
+    // Add Products
+    const products = [
+        { name: 'Dell XPS 13 Laptop', sku: 'LAP-001', category: 'Electronics', unit_price: 85000, current_stock: 10, min_stock_alert: 3 },
+        { name: 'MacBook Air M2', sku: 'LAP-002', category: 'Electronics', unit_price: 99000, current_stock: 8, min_stock_alert: 3 },
+        { name: 'Logitech MX Master Mouse', sku: 'MOUSE-001', category: 'Accessories', unit_price: 8000, current_stock: 30, min_stock_alert: 5 },
+        { name: 'Mechanical Keyboard', sku: 'KEY-001', category: 'Accessories', unit_price: 4500, current_stock: 20, min_stock_alert: 5 },
+        { name: 'Samsung 27 Inch Monitor', sku: 'MON-001', category: 'Electronics', unit_price: 35000, current_stock: 12, min_stock_alert: 4 },
+        { name: 'LG UltraWide Monitor', sku: 'MON-002', category: 'Electronics', unit_price: 28000, current_stock: 6, min_stock_alert: 3 },
+        { name: 'Kingston 1TB SSD', sku: 'SSD-001', category: 'Storage', unit_price: 12000, current_stock: 15, min_stock_alert: 5 },
+        { name: 'Western Digital 2TB HDD', sku: 'HDD-001', category: 'Storage', unit_price: 8000, current_stock: 20, min_stock_alert: 5 },
+        { name: 'Corsair 16GB RAM', sku: 'RAM-001', category: 'Components', unit_price: 6000, current_stock: 30, min_stock_alert: 10 },
+        { name: 'TP-Link WiFi Router', sku: 'NET-001', category: 'Networking', unit_price: 4000, current_stock: 20, min_stock_alert: 5 }
+    ];
+
+    for (const p of products) {
+        await db.run(
+            `INSERT INTO products (name, sku, category, unit_price, current_stock, min_stock_alert)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [p.name, p.sku, p.category, p.unit_price, p.current_stock, p.min_stock_alert]
+        );
+    }
+    console.log(`✅ Added ${products.length} products`);
+
+    console.log('✅ Database seeding complete!');
+}
 // ============================================
 // START SERVER
 // ============================================

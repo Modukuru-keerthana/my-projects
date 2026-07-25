@@ -243,6 +243,9 @@ const Sidebar = () => {
 // ============================================
 // LOGIN PAGE
 // ============================================
+// ============================================
+// LOGIN PAGE WITH DEMO CREDENTIALS DISPLAYED
+// ============================================
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -256,7 +259,7 @@ const Login = () => {
         setError('');
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:3001/api/auth/login', { email, password });
+            const res = await axios.post('https://erp-backend-ztwu.onrender.com/api/auth/login', { email, password });
             login(res.data.token, res.data.user);
             navigate('/');
         } catch (err: any) {
@@ -266,18 +269,27 @@ const Login = () => {
         }
     };
 
+    const demoCredentials = [
+        { role: '👑 Admin', email: 'admin@erp.com', password: 'admin123' },
+        { role: '📊 Sales', email: 'sales@erp.com', password: 'sales123' },
+        { role: '📦 Warehouse', email: 'warehouse@erp.com', password: 'warehouse123' },
+        { role: '💰 Accounts', email: 'accounts@erp.com', password: 'accounts123' },
+    ];
+
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#f1f5f9' }}>
-            <div style={{ background: 'white', padding: '48px', borderRadius: '16px', width: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.1)' }}>
+            <div style={{ background: 'white', padding: '48px', borderRadius: '16px', width: '450px', boxShadow: '0 20px 60px rgba(0,0,0,0.1)' }}>
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                     <h1 style={{ fontSize: '28px', margin: 0, color: '#0f172a' }}>🏢 ERP System</h1>
                     <p style={{ color: '#64748b', marginTop: '4px' }}>Sign in to your account</p>
                 </div>
+
                 {error && (
                     <div style={{ background: '#fee2e2', color: '#991b1b', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
                         {error}
                     </div>
                 )}
+
                 <form onSubmit={handleSubmit}>
                     <div style={styles.formGroup}>
                         <label style={styles.label}>Email Address</label>
@@ -318,14 +330,44 @@ const Login = () => {
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>
                 </form>
-                <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '13px', color: '#94a3b8' }}>
-                    Demo: admin@erp.com / admin123
+
+                {/* ========== DEMO CREDENTIALS SECTION ========== */}
+                <div style={{ marginTop: '24px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                    <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '12px', textAlign: 'center' }}>
+                        📋 Demo Credentials (Copy & Paste)
+                    </p>
+                    {demoCredentials.map((cred, index) => (
+                        <div
+                            key={index}
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '6px 12px',
+                                marginBottom: '4px',
+                                background: '#f8fafc',
+                                borderRadius: '6px',
+                                fontSize: '13px',
+                            }}
+                        >
+                            <span style={{ fontWeight: 600, minWidth: '80px' }}>{cred.role}</span>
+                            <span style={{ color: '#2563eb', fontFamily: 'monospace' }}>{cred.email}</span>
+                            <span style={{
+                                background: '#e2e8f0',
+                                padding: '0 10px',
+                                borderRadius: '4px',
+                                fontFamily: 'monospace',
+                                fontSize: '12px',
+                            }}>
+                                {cred.password}
+                            </span>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
     );
 };
-
 // ============================================
 // DASHBOARD WITH CUSTOMIZABLE GRAPHS
 // ============================================
@@ -336,14 +378,12 @@ const Dashboard = () => {
     const [challans, setChallans] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Graph selection state
     const [selectedGraph, setSelectedGraph] = useState('bar');
     const [selectedXAxis, setSelectedXAxis] = useState('name');
     const [selectedYAxis, setSelectedYAxis] = useState('current_stock');
     const [dataSource, setDataSource] = useState('products');
     const [graphData, setGraphData] = useState<any[]>([]);
 
-    // Available options
     const graphTypes = [
         { value: 'bar', label: '📊 Bar Chart' },
         { value: 'pie', label: '🥧 Pie Chart' },
@@ -357,7 +397,6 @@ const Dashboard = () => {
         { value: 'challans', label: '📋 Sales Challans' },
     ];
 
-    // Get attributes based on data source
     const getAttributes = (source: string) => {
         if (source === 'products') {
             return [
@@ -398,10 +437,10 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             const [statsRes, productsRes, customersRes, challansRes] = await Promise.all([
-                axios.get('http://localhost:3001/api/dashboard'),
-                axios.get('http://localhost:3001/api/products'),
-                axios.get('http://localhost:3001/api/customers'),
-                axios.get('http://localhost:3001/api/sales-challans')
+                axios.get('https://erp-backend-ztwu.onrender.com/api/dashboard'),
+                axios.get('https://erp-backend-ztwu.onrender.com/api/products'),
+                axios.get('https://erp-backend-ztwu.onrender.com/api/customers'),
+                axios.get('https://erp-backend-ztwu.onrender.com/api/sales-challans')
             ]);
             setStats(statsRes.data);
             setProducts(productsRes.data);
@@ -426,7 +465,6 @@ const Dashboard = () => {
             sourceData = challans;
         }
 
-        // Group by X-axis value and aggregate Y-axis
         const grouped: any = {};
         sourceData.forEach((item: any) => {
             const xValue = String(item[selectedXAxis] || 'Unknown');
@@ -583,7 +621,6 @@ const Dashboard = () => {
                 <p style={{ color: '#64748b', marginTop: '4px' }}>Select a graph and customize it with different attributes!</p>
             </div>
 
-            {/* Stats Cards */}
             <div style={styles.grid}>
                 {statItems.map((item, index) => (
                     <div key={index} style={styles.statCard}>
@@ -596,7 +633,6 @@ const Dashboard = () => {
                 ))}
             </div>
 
-            {/* Graph Controls */}
             <div style={styles.card}>
                 <h3 style={{ margin: '0 0 16px 0', fontSize: '16px' }}>🎛️ Customize Your Graph</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
@@ -654,7 +690,6 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Graph Display */}
             <div style={styles.card}>
                 <div style={{ height: '400px' }}>
                     {renderChart()}
@@ -681,7 +716,7 @@ const CrudTable = ({ title, endpoint, fields }: any) => {
 
     const fetchItems = async () => {
         try {
-            const url = search ? `http://localhost:3001/api/${endpoint}?search=${search}` : `http://localhost:3001/api/${endpoint}`;
+            const url = search ? `https://erp-backend-ztwu.onrender.com/api/${endpoint}?search=${search}` : `https://erp-backend-ztwu.onrender.com/api/${endpoint}`;
             const res = await axios.get(url);
             setItems(res.data);
         } catch (error) {
@@ -695,9 +730,9 @@ const CrudTable = ({ title, endpoint, fields }: any) => {
         e.preventDefault();
         try {
             if (editing) {
-                await axios.put(`http://localhost:3001/api/${endpoint}/${editing.id}`, formData);
+                await axios.put(`https://erp-backend-ztwu.onrender.com/api/${endpoint}/${editing.id}`, formData);
             } else {
-                await axios.post(`http://localhost:3001/api/${endpoint}`, formData);
+                await axios.post(`https://erp-backend-ztwu.onrender.com/api/${endpoint}`, formData);
             }
             setShowForm(false);
             setEditing(null);
@@ -712,7 +747,7 @@ const CrudTable = ({ title, endpoint, fields }: any) => {
     const handleDelete = async (id: number) => {
         if (!window.confirm('Are you sure you want to delete this item?')) return;
         try {
-            await axios.delete(`http://localhost:3001/api/${endpoint}/${id}`);
+            await axios.delete(`https://erp-backend-ztwu.onrender.com/api/${endpoint}/${id}`);
             fetchItems();
         } catch (error) {
             alert('Failed to delete.');
@@ -839,9 +874,9 @@ const SalesChallans = () => {
     const fetchData = async () => {
         try {
             const [challansRes, customersRes, productsRes] = await Promise.all([
-                axios.get('http://localhost:3001/api/sales-challans'),
-                axios.get('http://localhost:3001/api/customers'),
-                axios.get('http://localhost:3001/api/products')
+                axios.get('https://erp-backend-ztwu.onrender.com/api/sales-challans'),
+                axios.get('https://erp-backend-ztwu.onrender.com/api/customers'),
+                axios.get('https://erp-backend-ztwu.onrender.com/api/products')
             ]);
             setChallans(challansRes.data);
             setCustomers(customersRes.data);
@@ -856,7 +891,7 @@ const SalesChallans = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:3001/api/sales-challans', formData);
+            await axios.post('https://erp-backend-ztwu.onrender.com/api/sales-challans', formData);
             setShowForm(false);
             setFormData({ customer_id: '', items: [{ product_id: '', quantity: 1 }], status: 'Draft' });
             fetchData();
@@ -869,7 +904,7 @@ const SalesChallans = () => {
     const handleConfirm = async (id: number) => {
         if (!window.confirm('Confirm this challan? Stock will be reduced.')) return;
         try {
-            await axios.put(`http://localhost:3001/api/sales-challans/${id}/confirm`);
+            await axios.put(`https://erp-backend-ztwu.onrender.com/api/sales-challans/${id}/confirm`);
             fetchData();
         } catch (error: any) {
             alert(error.response?.data?.error || 'Failed to confirm');
@@ -879,7 +914,7 @@ const SalesChallans = () => {
     const handleCancel = async (id: number) => {
         if (!window.confirm('Cancel this challan?')) return;
         try {
-            await axios.put(`http://localhost:3001/api/sales-challans/${id}/cancel`);
+            await axios.put(`https://erp-backend-ztwu.onrender.com/api/sales-challans/${id}/cancel`);
             fetchData();
         } catch (error) {
             alert('Failed to cancel');
